@@ -95,3 +95,21 @@ class _ControllerModule:
     step: Any
 
 controller: _ControllerModule
+
+# ==== similarity ====
+def normalize(s: str) -> str: ...
+def utf8_length(s: str) -> int: ...
+def levenshtein_distance(a: str, b: str) -> int: ...
+def levenshtein_score(a: str, b: str) -> float: ...
+def jaro_winkler(a: str, b: str) -> float: ...
+def score(a: str, b: str) -> float: ...
+
+class _SimilarityModule:
+    normalize: Any
+    utf8_length: Any
+    levenshtein_distance: Any
+    levenshtein_score: Any
+    jaro_winkler: Any
+    score: Any
+
+similarity: _SimilarityModule

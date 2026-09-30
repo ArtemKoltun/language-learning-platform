@@ -3,6 +3,7 @@
 
 #include "llp/memory/memory.hpp"
 #include "llp/controller/controller.hpp"
+#include "llp/similarity/similarity.hpp"
 
 namespace py = pybind11;
 using namespace llp;
@@ -100,4 +101,31 @@ PYBIND11_MODULE(llp_core, m) {
              py::arg("I_old"), py::arg("I_pred"), py::arg("m"),
              py::arg("params"),
              "One PID step");
+
+    // ==================== similarity ====================
+    py::module_ sim = m.def_submodule("similarity", "String similarity");
+
+    sim.def("normalize", &similarity::normalize,
+            py::arg("s"),
+            "Normalize string: lowercase, trim, strip ASCII punctuation");
+
+    sim.def("utf8_length", &similarity::utf8_length,
+            py::arg("s"),
+            "Length in UTF-8 codepoints");
+
+    sim.def("levenshtein_distance", &similarity::levenshtein_distance,
+            py::arg("a"), py::arg("b"),
+            "Levenshtein distance in codepoints");
+
+    sim.def("levenshtein_score", &similarity::levenshtein_score,
+            py::arg("a"), py::arg("b"),
+            "Normalized Levenshtein score 0..1");
+
+    sim.def("jaro_winkler", &similarity::jaro_winkler,
+            py::arg("a"), py::arg("b"),
+            "Jaro-Winkler similarity 0..1");
+
+    sim.def("score", &similarity::score,
+            py::arg("a"), py::arg("b"),
+            "Combined similarity score 0..1");
 }

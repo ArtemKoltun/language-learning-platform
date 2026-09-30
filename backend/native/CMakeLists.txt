@@ -39,7 +39,7 @@ find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 add_subdirectory(memory)
 add_subdirectory(controller)
 add_subdirectory(bindings)
-# add_subdirectory(similarity)
+add_subdirectory(similarity)
 # add_subdirectory(metrics)
 # add_subdirectory(simulator)
 
