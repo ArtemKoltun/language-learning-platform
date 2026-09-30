@@ -79,6 +79,16 @@ class StepResult:
     clamped: bool
     def __init__(self) -> None: ...
 
+class RegulateResult:
+    state: ControllerState
+    m_new: float
+    tau_norm: float
+    I_pred: float
+    u: float
+    I_new: float
+    clamped: bool
+    def __init__(self) -> None: ...
+
 def apply_rate_limit(
     I_new: float, I_old: float, m: float, params: ControllerParams,
 ) -> float: ...
@@ -86,13 +96,25 @@ def step(
     state: ControllerState, score: float, I_old: float,
     I_pred: float, m: float, params: ControllerParams,
 ) -> StepResult: ...
+def regulate_step(
+    ctrl_state: ControllerState,
+    m: float,
+    score: float,
+    t_response: float,
+    answer_length: float,
+    I_old: float,
+    mem_params: MemoryParams,
+    ctrl_params: ControllerParams,
+) -> RegulateResult: ...
 
 class _ControllerModule:
     ControllerState: type[ControllerState]
     ControllerParams: type[ControllerParams]
     StepResult: type[StepResult]
+    RegulateResult: type[RegulateResult]
     apply_rate_limit: Any
     step: Any
+    regulate_step: Any
 
 controller: _ControllerModule
 

@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "llp/memory/memory.hpp"
+
 namespace llp::controller {
 
 struct ControllerState {
@@ -41,16 +43,43 @@ struct StepResult {
     bool clamped;                // сработал ли rate limiter
 };
 
+// Полный шаг 2DOF: feedforward (memory) + feedback (PID)
+struct RegulateResult {
+    ControllerState state;      // обновлённое состояние PID
+    double m_new;               // обновлённая прочность памяти
+    double tau_norm;            // нормализованное время ответа
+    double I_pred;              // предсказание модели (feedforward)
+    double u;                   // выход PID (feedback)
+    double I_new;               // итоговый интервал
+    bool clamped;               // сработал ли rate limiter
+};
+
 // Rate limiting с gain scheduling: границы зависят от прочности m
-double apply_rate_limit(double I_new, double I_old, double m,
-                        const ControllerParams& p);
+double apply_rate_limit(
+    double I_new,
+    double I_old,
+    double m,
+    const ControllerParams& p);
 
 // Один шаг PID
-StepResult step(const ControllerState& state,
-                double score,
-                double I_old,
-                double I_pred,
-                double m,
-                const ControllerParams& p);
+StepResult step(
+    const ControllerState& state,
+    double score,
+    double I_old,
+    double I_pred,
+    double m,
+    const ControllerParams& p);
+
+// Единый вход в 2DOF систему.
+// Внутри: update_strength -> predict_interval -> PID step.
+RegulateResult regulate_step(
+    const ControllerState& ctrl_state,
+    double m,
+    double score,
+    double t_response,
+    double answer_length,
+    double I_old,
+    const memory::MemoryParams& mem_params,
+    const ControllerParams& ctrl_params);
 
 }  // namespace llp::controller

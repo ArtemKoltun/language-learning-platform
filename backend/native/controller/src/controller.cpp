@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "llp/memory/memory.hpp"
+
 namespace llp::controller {
 
 double apply_rate_limit(double I_new, double I_old, double m,
@@ -19,12 +21,14 @@ double apply_rate_limit(double I_new, double I_old, double m,
     return std::clamp(I_new, lower, upper);
 }
 
-StepResult step(const ControllerState& state,
-                double score,
-                double I_old,
-                double I_pred,
-                double m,
-                const ControllerParams& p) {
+StepResult step(
+    const ControllerState& state,
+    double score,
+    double I_old,
+    double I_pred,
+    double m,
+    const ControllerParams& p) {
+
     StepResult res;
     res.state = state;
     res.clamped = false;
@@ -72,6 +76,44 @@ StepResult step(const ControllerState& state,
     res.state.de_prev = de;
     res.u = u;
     res.I_new = I_new;
+    return res;
+}
+
+RegulateResult regulate_step(
+    const ControllerState& ctrl_state,
+    double m,
+    double score,
+    double t_response,
+    double answer_length,
+    double I_old,
+    const memory::MemoryParams& mem_params,
+    const ControllerParams& ctrl_params) {
+
+    RegulateResult res;
+    res.state = ctrl_state;
+    res.clamped = false;
+
+    // Шаг 1: нормализация времени ответа
+    double len = std::max(answer_length, 1.0);
+    res.tau_norm = t_response / len;
+
+    // Шаг 2: обновление прочности памяти
+    res.m_new = memory::update_strength(m, score, res.tau_norm, mem_params);
+
+    // Шаг 3: feedforward — предсказание интервала
+    res.I_pred = memory::predict_interval(
+        mem_params.a, mem_params.b, mem_params.c,
+        mem_params.R_target,
+        mem_params.I_min, mem_params.I_max);
+
+    // Шаг 4: feedback — PID поверх предсказания.
+    // Передаём m (старую прочность) для rate limiting.
+    auto pid = step(ctrl_state, score, I_old, res.I_pred, m, ctrl_params);
+    res.state = pid.state;
+    res.u = pid.u;
+    res.I_new = pid.I_new;
+    res.clamped = pid.clamped;
+
     return res;
 }
 

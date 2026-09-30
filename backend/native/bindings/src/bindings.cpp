@@ -91,6 +91,16 @@ PYBIND11_MODULE(llp_core, m) {
         .def_readwrite("I_new", &controller::StepResult::I_new)
         .def_readwrite("clamped", &controller::StepResult::clamped);
 
+    py::class_<controller::RegulateResult>(ctrl, "RegulateResult")
+        .def(py::init<>())
+        .def_readwrite("state", &controller::RegulateResult::state)
+        .def_readwrite("m_new", &controller::RegulateResult::m_new)
+        .def_readwrite("tau_norm", &controller::RegulateResult::tau_norm)
+        .def_readwrite("I_pred", &controller::RegulateResult::I_pred)
+        .def_readwrite("u", &controller::RegulateResult::u)
+        .def_readwrite("I_new", &controller::RegulateResult::I_new)
+        .def_readwrite("clamped", &controller::RegulateResult::clamped);
+
     ctrl.def("apply_rate_limit", &controller::apply_rate_limit,
              py::arg("I_new"), py::arg("I_old"), py::arg("m"),
              py::arg("params"),
@@ -101,6 +111,13 @@ PYBIND11_MODULE(llp_core, m) {
              py::arg("I_old"), py::arg("I_pred"), py::arg("m"),
              py::arg("params"),
              "One PID step");
+
+    ctrl.def("regulate_step", &controller::regulate_step,
+             py::arg("ctrl_state"), py::arg("m"), py::arg("score"),
+             py::arg("t_response"), py::arg("answer_length"),
+             py::arg("I_old"),
+             py::arg("mem_params"), py::arg("ctrl_params"),
+             "Full 2DOF step: feedforward (memory) + feedback (PID)");
 
     // ==================== similarity ====================
     py::module_ sim = m.def_submodule("similarity", "String similarity");
